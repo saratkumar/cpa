@@ -1,0 +1,54 @@
+/* Style for the chart container */
+#cpa-chart {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100%;
+    margin-top: 50px;
+  }
+  
+  /* Style for the SVG */
+  svg {
+    border: 1px solid #ccc;
+    border-radius: 8px;
+  }
+  
+  /* Style for the nodes */
+  .node {
+    fill: steelblue;
+    stroke: white;
+    stroke-width: 2;
+    cursor: pointer;
+  }
+  
+  /* Style for the text labels inside the nodes */
+  text {
+    font-size: 12px;
+    fill: white;
+    font-family: Arial, sans-serif;
+    pointer-events: none; /* Ensure text doesn't block mouse events */
+  }
+  
+  /* Style for the links (arrows) */
+  .link {
+    fill: none;
+    stroke-width: 2;
+    stroke: gray;
+  }
+  
+  /* Optional: Hover effect for nodes */
+  .node:hover {
+    fill: orange;
+    stroke: black;
+  }
+  
+
+  #tooltip {
+    position: absolute;
+    padding: 10px;
+    background-color: rgba(0, 0, 0, 0.7);
+    color: white;
+    border-radius: 5px;
+    pointer-events: none;
+    display: none; /* Hidden by default */
+  }
