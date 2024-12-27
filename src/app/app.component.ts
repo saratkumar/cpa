@@ -4,7 +4,7 @@ import { CpaChartComponent } from './cpa-chart/cpa-chart.component';
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet, 
+  imports: [ 
     CpaChartComponent
   ],
   templateUrl: './app.component.html',

@@ -52,3 +52,7 @@
     pointer-events: none;
     display: none; /* Hidden by default */
   }
+
+  .node-group {
+    cursor: pointer;
+  }

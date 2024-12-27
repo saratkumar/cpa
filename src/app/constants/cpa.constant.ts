@@ -1,6 +1,6 @@
 export const GRAPH_PROPERTIES = {
     width: 8000,
-    height: 3000,
+    height: 2000,
     margin: 50
 }
 
