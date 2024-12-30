@@ -20,18 +20,27 @@ export class CpaChartSvgService {
     // window.scrollTo(0, 0);
     d3.select(element).selectAll('*').remove();
     this.root = d3.hierarchy(treeData);
-     
+
+    // Dynamically calculate height based on the number of levels
+    const levels = this.getGraphLevels();
+    const graphHeight = levels * GRAPH_PROPERTIES.levelHeight + GRAPH_PROPERTIES.margin * 2;
+    
+     // Create a tree layout
+    const treeLayout = d3.tree().size([GRAPH_PROPERTIES.width - GRAPH_PROPERTIES.margin * 2, graphHeight - GRAPH_PROPERTIES.margin * 2])
+     .separation((a, b) => a.parent === b.parent ? 1 : 2);  // Adjust separation between nodes
+    treeLayout(this.root);
+
+    // Measure dynamic width based on node positions
+    const graphWidth = this.calculateDynamicWidth(this.root);
+    
     // Create SVG
     this.svg = d3
       .select(element)
       .append('svg')
-      .attr('width', GRAPH_PROPERTIES.width)
-      .attr('height', GRAPH_PROPERTIES.height);
+      .attr('width', graphWidth)
+      .attr('height', graphHeight);
 
-      // Create a tree layout
-    const treeLayout = d3.tree().size([GRAPH_PROPERTIES.width - GRAPH_PROPERTIES.margin * 2, GRAPH_PROPERTIES.height - GRAPH_PROPERTIES.margin * 2])
-    .separation((a, b) => a.parent === b.parent ? 1 : 2);  // Adjust separation between nodes
-  treeLayout(this.root);
+     
 
     this.getLegend();
     // Create a container group for all graph elements (nodes, links)
@@ -117,7 +126,7 @@ export class CpaChartSvgService {
     .join("path")
     .attr("d", (d: any) => {
       const linkVertical = d3.linkVertical<{ source: { x: number; y: number }; target: { x: number; y: number } }, [number, number]>()
-        .x((d: any) => d.x + 20)
+        .x((d: any) => d.x )
         .y((d: any) => d.y + 20);
       return linkVertical(d);
     })
@@ -268,7 +277,7 @@ export class CpaChartSvgService {
         // Create background rectangle for the text
         d3.select(this)
           .append('rect')
-          .attr('x', midX - 20)  // Position of the rectangle (adjust width)
+          .attr('x', midX - 40)  // Position of the rectangle (adjust width)
           .attr('y', midY - 150)  // Position of the rectangle (adjust height)
           .attr('width', 100)     // Width of the rectangle
           .attr('height', 100)     // Height of the rectangle
@@ -281,7 +290,7 @@ export class CpaChartSvgService {
         // Add the text over the background
         d3.select(this)
           .append('text')
-          .attr('x', midX)        // Horizontal positioning of the text
+          .attr('x', midX -20)        // Horizontal positioning of the text
           .attr('y', midY -80)        // Vertical positioning of the text
           .attr('dy', 5)          // Adjust vertical alignment
           .attr('text-anchor', 'middle')
@@ -312,6 +321,25 @@ export class CpaChartSvgService {
     this.svg.call(zoom.transform, d3.zoomIdentity
       .translate(initialTranslateX, 0) // Position the tree
       .scale(defaultScale)); 
+  }
+
+
+  private getGraphLevels(): number {
+    // Traverse the hierarchy and find the maximum depth
+    const levels: any = d3.max(this.root.descendants(), (d: any) => d.depth);
+    return levels + 1; // Add 1 to include the root node as level 1
+  }
+
+  private calculateDynamicWidth(root: any): number {
+    // Traverse all nodes to find min and max x-coordinates
+    const allNodes = root.descendants();
+    const minX: any = d3.min(allNodes, (d: any) => d.x) || 0;
+    const maxX: any = d3.max(allNodes, (d: any) => d.x) || GRAPH_PROPERTIES.width;
+  
+    // Add margins to ensure the graph isn't clipped
+    const margin = GRAPH_PROPERTIES.margin * 2;
+  
+    return maxX - minX + margin;
   }
 
   clearService(): void {
