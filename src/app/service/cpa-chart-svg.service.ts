@@ -92,18 +92,18 @@ export class CpaChartSvgService {
   private getGraphCtx() {
     this.graph = this.svg.append("g")
     .attr("transform", `translate(${GRAPH_PROPERTIES.margin},${GRAPH_PROPERTIES.margin})`);
-    this.svg.append('defs')
-    .append('marker')
-    .attr('id', 'arrowhead')
-    .attr('viewBox', '0 0 10 10')
-    .attr('refX', 5)   // Position of the arrowhead at the end of the line
-    .attr('refY', 5)
-    .attr('markerWidth', 6)
-    .attr('markerHeight', 6)
-    .attr('orient', 'auto')
-    .append('path')
-    .attr('d', 'M 0 0 L 10 5 L 0 10 z')  // Triangle arrow shape
-    .attr('fill', 'red');  
+    // this.svg.append('defs')
+    // .append('marker')
+    // .attr('id', 'arrowhead')
+    // .attr('viewBox', '0 0 10 10')
+    // .attr('refX', 5)   // Position of the arrowhead at the end of the line
+    // .attr('refY', 5)
+    // .attr('markerWidth', 6)
+    // .attr('markerHeight', 6)
+    // .attr('orient', 'auto')
+    // .append('path')
+    // .attr('d', 'M 0 0 L 10 5 L 0 10 z')  // Triangle arrow shape
+    // .attr('fill', 'red');  
   } 
 
   
@@ -122,9 +122,12 @@ export class CpaChartSvgService {
       return linkVertical(d);
     })
     .attr("fill", "none")
-    .attr('stroke', (d: any) => this.cpaChartService.isCriticalPath(d) ? 'red' : 'gray')
-    .attr("stroke-width", 5)
-    .attr("marker-end", "url(#arrowhead)");
+    .attr('stroke', (d: any) => {
+      if (this.cpaChartService.criticalPathColorCode[d.source.data.name] && this.cpaChartService.criticalPathColorCode[d.target.data.name]) return this.cpaChartService.criticalPathColorCode[d.source.data.name];
+      return 'gray';
+    })
+    .attr("stroke-width", 15);
+    // .attr("marker-end", "url(#arrowhead)");
   }
 
   private getRectangleNode(cpaChartService: any) {
@@ -176,11 +179,23 @@ export class CpaChartSvgService {
         .style("font-size", "40px") // Adjust font size
         .style("fill", "white")
         .text(d.data.name);
+
+        
   
       // Measure text width
       const textWidth = textElement.node().getComputedTextLength();
       const padding = 20; // Add padding around the text
-  
+
+      const textElement1: any = group
+        .append("text")
+        .attr("class", "label")
+        .attr("x", d.x+textWidth+90) // Temporarily set x
+        .attr("y", d.y + 50) // Adjust for vertical centering
+        .attr("text-anchor", "middle")
+        .style("font-size", "60px") // Adjust font size
+        .style("fill", "black")
+        .text(cpaChartService.criticalPathSystemWiseTotalObj[d.data.system].lastNode === d.data.name ? `${d.data.system} - Total Value: ${cpaChartService.criticalPathSystemWiseTotalObj[d.data.system].totalValue}` : "");
+
       // Set rectangle dimensions dynamically
       const rectWidth = textWidth + padding;
   
@@ -200,6 +215,8 @@ export class CpaChartSvgService {
         .attr("stroke-width", 2);
   
       // Re-center the text if necessary
+      textElement.attr("x", d.x);
+
       textElement.attr("x", d.x);
     });
 
@@ -252,9 +269,9 @@ export class CpaChartSvgService {
         d3.select(this)
           .append('rect')
           .attr('x', midX - 20)  // Position of the rectangle (adjust width)
-          .attr('y', midY - 20)  // Position of the rectangle (adjust height)
-          .attr('width', 65)     // Width of the rectangle
-          .attr('height', 65)     // Height of the rectangle
+          .attr('y', midY - 150)  // Position of the rectangle (adjust height)
+          .attr('width', 100)     // Width of the rectangle
+          .attr('height', 100)     // Height of the rectangle
           .attr('rx', 5)          // Rounded corners
           .attr('ry', 5)
           .attr('fill', 'white')  // Background color
@@ -265,7 +282,7 @@ export class CpaChartSvgService {
         d3.select(this)
           .append('text')
           .attr('x', midX)        // Horizontal positioning of the text
-          .attr('y', midY)        // Vertical positioning of the text
+          .attr('y', midY -80)        // Vertical positioning of the text
           .attr('dy', 5)          // Adjust vertical alignment
           .attr('text-anchor', 'middle')
           .text((d: any) => `${d.target.data.value}`)

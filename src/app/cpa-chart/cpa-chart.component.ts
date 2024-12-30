@@ -41,6 +41,7 @@ export class CpaChartComponent {
     this.cpaChartService.extractCPAPath(this.criticalPath);
     this.createBSTChart();
     
+    
   }
 
   private createBSTChart(): void {

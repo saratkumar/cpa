@@ -8,6 +8,7 @@ export class CpaChartService {
   criticalPathTotalMap: any = {};
   allSystemProps: any = {};
   criticalPathColorCode: any = {};
+  criticalPathSystemWiseTotalObj: any = {};
   constructor() { }
 
   public isCriticalPath(d: any): boolean {
@@ -52,12 +53,19 @@ export class CpaChartService {
 
   extractCPAPath(paths: any): void  {
     this.criticalPathColorCode = {};
+    this.criticalPathSystemWiseTotalObj = {};
     paths.forEach((path: any) => {
       const {system: sourceSystem, jobName: sourceJobName}: any = this.getJobName(path.source);
       const {system: targetSystem, jobName: targetJobName}: any = this.getJobName(path.target);
       this.criticalPathColorCode[sourceJobName] = this.allSystemProps[sourceSystem].color;
       this.criticalPathColorCode[targetJobName] = this.allSystemProps[targetSystem].color;
+      if(path.source != path.target) {
+        this.criticalPathSystemWiseTotalObj[targetSystem] = this.criticalPathSystemWiseTotalObj[targetSystem] || {lastNode: targetJobName, totalValue: 0}; 
+        this.criticalPathSystemWiseTotalObj[targetSystem] = {lastNode: targetJobName, totalValue: this.criticalPathSystemWiseTotalObj[targetSystem].totalValue + + parseFloat(path.value)} 
+      }
+      
     });
+
   }
 
   generateDarkColor(): string {
@@ -71,6 +79,7 @@ export class CpaChartService {
     this.criticalPathTotalMap = {};
     this.allSystemProps = {};
     this.criticalPathColorCode = {};
+    this.criticalPathSystemWiseTotalObj = {};
   }
 
   setAllSystemColorCode(systemsProps: any) {
