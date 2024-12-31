@@ -118,7 +118,6 @@ export class CpaChartSvgService {
   
 
   private getLink() {
-    const maxLinkHeight = 100;
     this.graph
     .append("g")
     .selectAll("path")
@@ -195,15 +194,15 @@ export class CpaChartSvgService {
       const textWidth = textElement.node().getComputedTextLength();
       const padding = 20; // Add padding around the text
 
-      const textElement1: any = group
-        .append("text")
-        .attr("class", "label")
-        .attr("x", d.x+textWidth+90) // Temporarily set x
-        .attr("y", d.y + 50) // Adjust for vertical centering
-        .attr("text-anchor", "middle")
-        .style("font-size", "60px") // Adjust font size
-        .style("fill", "black")
-        .text(cpaChartService.criticalPathSystemWiseTotalObj[d.data.system].lastNode === d.data.name ? `${d.data.system} - Total Value: ${cpaChartService.criticalPathSystemWiseTotalObj[d.data.system].totalValue}` : "");
+      // const textElement1: any = group
+      //   .append("text")
+      //   .attr("class", "label")
+      //   .attr("x", d.x+textWidth+90) // Temporarily set x
+      //   .attr("y", d.y + 50) // Adjust for vertical centering
+      //   .attr("text-anchor", "middle")
+      //   .style("font-size", "60px") // Adjust font size
+      //   .style("fill", "black")
+      //   .text(cpaChartService.criticalPathSystemWiseTotalObj[d.data.system].lastNode === d.data.name ? `${d.data.system} - Total Value: ${cpaChartService.criticalPathSystemWiseTotalObj[d.data.system].totalValue}` : "");
 
       // Set rectangle dimensions dynamically
       const rectWidth = textWidth + padding;

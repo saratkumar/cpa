@@ -54,6 +54,8 @@ export class CpaChartService {
   extractCPAPath(paths: any): void  {
     this.criticalPathColorCode = {};
     this.criticalPathSystemWiseTotalObj = {};
+    const obj: any = {};
+    let val = 0;
     paths.forEach((path: any) => {
       const {system: sourceSystem, jobName: sourceJobName}: any = this.getJobName(path.source);
       const {system: targetSystem, jobName: targetJobName}: any = this.getJobName(path.target);
@@ -63,8 +65,18 @@ export class CpaChartService {
         this.criticalPathSystemWiseTotalObj[targetSystem] = this.criticalPathSystemWiseTotalObj[targetSystem] || {lastNode: targetJobName, totalValue: 0}; 
         this.criticalPathSystemWiseTotalObj[targetSystem] = {lastNode: targetJobName, totalValue: this.criticalPathSystemWiseTotalObj[targetSystem].totalValue + + parseFloat(path.value)} 
       }
+
+      // if(sourceSystem !== targetSystem) {
+      //   obj[targetJobName] = {system: sourceSystem, value: val + parseFloat(path.value)}
+      //   val =0;
+      // } else {
+      //   val = val + parseFloat(path.value);
+      // }
       
     });
+
+
+    console.log("TEST", obj)
 
   }
 
