@@ -5,7 +5,7 @@
             <div class="col-5 text-align-center m-auto">
                 <h6>CRITICAL PATH ANALYSIS</h6>
             </div>
-            <div class="col-3">
+            <div class="col-2">
                 <mat-form-field class="w-100 mt-2">
                     <mat-label>System</mat-label>
                     <mat-select [(ngModel)]="selectedSystem">
@@ -15,7 +15,19 @@
                     </mat-select>
                 </mat-form-field>
             </div>
-            <div class="col-3">
+            <div class="col-2">
+                <mat-form-field class="w-100  mt-2">
+                    <mat-label>Job Name</mat-label>
+                    <input type="text" placeholder="Pick one" aria-label="Number" matInput [formControl]="myControl"
+                        [matAutocomplete]="auto">
+                    <mat-autocomplete #auto="matAutocomplete">
+                        @for (option of filteredOptions | async; track option) {
+                        <mat-option [value]="option">{{option}}</mat-option>
+                        }
+                    </mat-autocomplete>
+                </mat-form-field>
+            </div>
+            <div class="col-2">
                 <mat-form-field class="w-100  mt-2">
                     <mat-label>Date</mat-label>
                     <input matInput [matDatepicker]="picker" [(ngModel)]="selectedDate">

@@ -1,5 +1,5 @@
-import { Component, signal } from '@angular/core';
-import { FormsModule } from '@angular/forms';
+import { Component, OnInit, signal } from '@angular/core';
+import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import {MatSelectModule} from '@angular/material/select';
 import {MatInputModule} from '@angular/material/input';
@@ -8,26 +8,50 @@ import { MatButtonModule } from '@angular/material/button';
 import { CpaChartComponent } from '../cpa-chart/cpa-chart.component';
 import { CommonModule } from '@angular/common';
 import { CpaApiService } from '../service/common/cpa-api/cpa-api.service';
+import { map, Observable, startWith } from 'rxjs';
+import {AsyncPipe} from '@angular/common';
+import {MatAutocompleteModule} from '@angular/material/autocomplete';
 @Component({
   selector: 'app-cpa',
   imports: [
     MatFormFieldModule, 
     MatSelectModule, 
-    MatInputModule, FormsModule, 
+    MatInputModule, 
     MatDatepickerModule,
     MatButtonModule,
     CpaChartComponent,
-    CommonModule
+    CommonModule,
+    MatAutocompleteModule,
+    AsyncPipe,
+    FormsModule,
+    ReactiveFormsModule,
   ],
   templateUrl: './cpa.component.html',
   styleUrl: './cpa.component.css'
 })
-export class CpaComponent {
+export class CpaComponent implements OnInit {
   selectedDate: any;
   selectedSystem: string = ""
   showChart: boolean = false;
 
+  myControl = new FormControl('');
+  options: string[] = ['One', 'Two', 'Three'];
+  filteredOptions: Observable<string[]> | undefined;
+
+
   constructor(private cpaApiService: CpaApiService) {}
+  ngOnInit(): void {
+    this.filteredOptions = this.myControl.valueChanges.pipe(
+      startWith(''),
+      map(value => this._filter(value || '')),
+    );
+  }
+
+  private _filter(value: string): string[] {
+    const filterValue = value.toLowerCase();
+
+    return this.options.filter(option => option.toLowerCase().includes(filterValue));
+  }
 
   foods: any = [
     {value: 'steak-0', viewValue: 'Steak'},
