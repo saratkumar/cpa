@@ -11,5 +11,5 @@ import { CpaChartComponent } from './cpa-chart/cpa-chart.component';
   styleUrl: './app.component.css'
 })
 export class AppComponent {
-  title = 'cpa-ui';
+  title = 'cpa-ui-2';
 }
