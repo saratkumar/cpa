@@ -131,7 +131,8 @@ export class CpaChartSvgService {
     })
     .attr("fill", "none")
     .attr('stroke', (d: any) => {
-      if (this.cpaChartService.criticalPathColorCode[d.source.data.name] && this.cpaChartService.criticalPathColorCode[d.target.data.name]) return this.cpaChartService.criticalPathColorCode[d.source.data.name];
+      // if (this.cpaChartService.criticalPathColorCode[d.source.data.name] && this.cpaChartService.criticalPathColorCode[d.target.data.name]) return this.cpaChartService.criticalPathColorCode[d.source.data.name];
+      if (d.source.data.isCriticalPath && d.target.data.isCriticalPath) return "red";
       return 'gray';
     })
     .attr("stroke-width", 15);
@@ -186,7 +187,7 @@ export class CpaChartSvgService {
         .attr("text-anchor", "middle")
         .style("font-size", "40px") // Adjust font size
         .style("fill", "white")
-        .text(d.data.name);
+        .text(d.data.actualJobName ? (d.data.actualJobName) : d.data.name);
 
         
   
@@ -216,7 +217,7 @@ export class CpaChartSvgService {
         .attr("width", rectWidth)
         .attr("height", 80)
         .attr("fill", (d: any) =>  {
-          if (cpaChartService.criticalPathColorCode[d.data.name]) return cpaChartService.criticalPathColorCode[d.data.name];
+          if (d.data.isCriticalPath) return "red";
           return 'steelblue'; // Default for unknown status
         }) // Node color
         .attr("stroke", "black")
@@ -254,8 +255,12 @@ export class CpaChartSvgService {
       .attr('x', (d: any) => d.x - 130) // Offset to the right of the node
       .attr('y', (d: any) => d.y + 180) // Vertically aligned with the node
       .text((d: any) => {
-        const total = this.cpaChartService.getTotalValueOfPath(d, 0.00, []);
-        return `Total: ${total.toFixed(2)}`
+        if(this.cpaChartService.criticalPathSystemWiseTotalObj[d.data.name]) {
+          return `Total: ${this.cpaChartService.criticalPathSystemWiseTotalObj[d.data.name]}`
+        } else {
+          return  ""
+        }
+          
       }) // Placeholder function for total
       .attr('font-size', 60)
       .attr('fill', 'black');

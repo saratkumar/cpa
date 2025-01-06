@@ -28,58 +28,6 @@ export class CpaChartService {
     return Math.max(50, textLength * 10); // Minimum width 50, adjust multiplier (10) as needed
   }
 
-  /***
-   * Get total value of the path
-   */
-
-  getTotalValueOfPath(d: any, val: number, systems: Array<string>): number {
-    if(!d.parent) {
-      // systems.push(d.data.system);
-      const t = val + parseFloat(d.data.value);
-      this.criticalPathTotalMap[Date.now()] = {total : t, systems: this.removeDuplicateSystems(systems)}
-      // console.log("This one getting called first", this.criticalPathTotalMap);
-      return t;
-    }
-    
-    val = val + parseFloat(d.data.value);
-    // systems.push(d.data.system);
-    return this.getTotalValueOfPath(d.parent, val, systems);                                  
-  }
-
-  removeDuplicateSystems(array: any): Array<String> {
-    array = [...new Set(array)];
-    return array;
-  }
-
-  extractCPAPath(paths: any): void  {
-    this.criticalPathColorCode = {};
-    this.criticalPathSystemWiseTotalObj = {};
-    const obj: any = {};
-    let val = 0;
-    paths.forEach((path: any) => {
-      const {system: sourceSystem, jobName: sourceJobName}: any = this.getJobName(path.source);
-      const {system: targetSystem, jobName: targetJobName}: any = this.getJobName(path.target);
-      this.criticalPathColorCode[sourceJobName] = this.allSystemProps[sourceSystem].color;
-      this.criticalPathColorCode[targetJobName] = this.allSystemProps[targetSystem].color;
-      if(path.source != path.target) {
-        this.criticalPathSystemWiseTotalObj[targetSystem] = this.criticalPathSystemWiseTotalObj[targetSystem] || {lastNode: targetJobName, totalValue: 0}; 
-        this.criticalPathSystemWiseTotalObj[targetSystem] = {lastNode: targetJobName, totalValue: this.criticalPathSystemWiseTotalObj[targetSystem].totalValue + + parseFloat(path.value)} 
-      }
-
-      // if(sourceSystem !== targetSystem) {
-      //   obj[targetJobName] = {system: sourceSystem, value: val + parseFloat(path.value)}
-      //   val =0;
-      // } else {
-      //   val = val + parseFloat(path.value);
-      // }
-      
-    });
-
-
-    console.log("TEST", obj)
-
-  }
-
   generateDarkColor(): string {
     const r = Math.floor(Math.random() * 101 + 100);
     const g = Math.floor(Math.random() * 101 + 100);
