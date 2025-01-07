@@ -1,4 +1,4 @@
-import { Component, OnInit, signal } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef  } from '@angular/core';
 import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import {MatSelectModule} from '@angular/material/select';
@@ -11,6 +11,7 @@ import { CpaApiService } from '../service/common/cpa-api/cpa-api.service';
 import { map, Observable, startWith } from 'rxjs';
 import {AsyncPipe} from '@angular/common';
 import {MatAutocompleteModule} from '@angular/material/autocomplete';
+import { CpaChartService } from '../service/cpa-chart.service';
 @Component({
   selector: 'app-cpa',
   imports: [
@@ -33,13 +34,13 @@ export class CpaComponent implements OnInit {
   selectedDate: any;
   selectedSystem: string = ""
   showChart: boolean = false;
-
+  legendData: Array<any> = [];
   myControl = new FormControl('');
   options: string[] = ['One', 'Two', 'Three'];
   filteredOptions: Observable<string[]> | undefined;
 
 
-  constructor(private cpaApiService: CpaApiService) {}
+  constructor(private cpaApiService: CpaApiService, private cpaChartService: CpaChartService, private cdref: ChangeDetectorRef) {}
   ngOnInit(): void {
     this.filteredOptions = this.myControl.valueChanges.pipe(
       startWith(''),
@@ -60,14 +61,26 @@ export class CpaComponent implements OnInit {
   ];
 
   onGenerate(): void {
-    this.showChart = true;
+    this.showChart = !this.showChart;
     if(this.selectedDate) {
       const offset = this.selectedDate.getTimezoneOffset()
       const date = new Date(this.selectedDate.getTime() - (offset*60*1000));
       this.showChart = true;
       const modifiedDate =date.toISOString().split('T')[0] 
       this.cpaApiService.generateCPA({date: modifiedDate.replaceAll("-", ""), system: this.selectedSystem}).subscribe(e => console.log(e));
+
+      
     }
     
+  }
+
+  onAfterProcessingCriticalPath(): any {
+    this.legendData = Object.keys(this.cpaChartService.allSystemProps).map((key) => ({
+      label: key,
+      color: this.cpaChartService.allSystemProps[key].color,
+      total: this.cpaChartService.allSystemProps[key].total,
+      jobs: this.cpaChartService.allSystemProps[key].jobs,
+    }));
+    this.cdref.detectChanges();
   }
 }
