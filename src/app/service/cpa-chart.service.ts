@@ -54,14 +54,22 @@ export class CpaChartService {
 
   
   extractSystemAttributes(criticalPaths: Array<any>): void {
-    criticalPaths.forEach((path: any) => {
+    criticalPaths.forEach((path: any, index: number) => {
       const { jobName, system }: any = this.getJobName(path.source);
-      this.allSystemProps[system] = this.allSystemProps[system] || {...this.allSystemProps[system], color: this.generateDarkColor(), total: 0, maxValue: Number.MIN_VALUE};
+      this.allSystemProps[system] = this.allSystemProps[system] || {...this.allSystemProps[system], color: this.generateDarkColor(), total: 0, maxValue: Number.MIN_VALUE, jobs: []};
+      if(index === criticalPaths.length -1) {
+        const { jobName, system }: any = this.getJobName(path.target);
+        this.allSystemProps[system] = this.allSystemProps[system] || {...this.allSystemProps[system], color: this.generateDarkColor(), total: 0, maxValue: Number.MIN_VALUE, jobs: []};
+          
+      }
       this.allSystemProps[system].total += parseFloat(path.value);
       if(parseFloat(path.value) > this.allSystemProps[system].maxValue) {
-        this.allSystemProps[system].maxValue = parseFloat(path.value); 
+        this.allSystemProps[system].maxValue = parseFloat(path.value);
+        this.allSystemProps[system].jobs = [jobName];
+        
       }
     });
+;
 
     console.log(this.allSystemProps, "asdfs");
      
