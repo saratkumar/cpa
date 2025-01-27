@@ -22,8 +22,6 @@ import { CpaChartSvgService } from '../service/cpa-chart-svg.service';
 import { SideModalComponent } from './side-modal/side-modal.component';
 import { CpaChartService } from '../service/cpa-chart.service';
 import { DOCUMENT } from "@angular/common";
-import * as htmlToImage from "html-to-image";
-import jsPDF from 'jspdf';
 @Component({
   selector: 'app-cpa-chart',
   template: `
