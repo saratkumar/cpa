@@ -17,30 +17,40 @@
 // 4 position will have timing details 
 
 
-import { Component, OnInit, ElementRef, ViewChild } from '@angular/core';
+import { Component, OnInit, ElementRef, ViewChild, output, Inject } from '@angular/core';
 import { CpaChartSvgService } from '../service/cpa-chart-svg.service';
 import { SideModalComponent } from './side-modal/side-modal.component';
 import { CpaChartService } from '../service/cpa-chart.service';
-import e from 'express';
-
+import { DOCUMENT } from "@angular/common";
+import * as htmlToImage from "html-to-image";
+import jsPDF from 'jspdf';
 @Component({
   selector: 'app-cpa-chart',
-  template: `<div id="cpa-chart"></div><app-side-modal #modalR></app-side-modal>`,
+  template: `
+  <button type="button" class="btn btn-info" (click)="downloadDataUrl()">Download</button>
+  <div id="cpa-chart" style="overflow: auto"></div><app-side-modal #modalR></app-side-modal>`,
   standalone: true,
   imports: [SideModalComponent],
   styleUrls: ['./cpa-chart.component.css']
 })
 export class CpaChartComponent {
-  @ViewChild('modalR') modalRef: SideModalComponent | any;
-  constructor(private el: ElementRef, private cpaChartSvgService: CpaChartSvgService, private cpaChartService: CpaChartService) { }
+   @ViewChild('modalR') modalRef: SideModalComponent | any;
+  constructor(private el: ElementRef, 
+    private cpaChartSvgService: CpaChartSvgService, 
+    private cpaChartService: CpaChartService,
+    @Inject(DOCUMENT) private coreDoc: Document) { }
 
   treeData: any = {};
   map: any = new Map();
   criticalPath: Array<String> = [];
+    
+ onGenerate = output<string>();
+
   ngAfterViewInit(): void {
     this.parseJob();
+    this.onGenerate.emit("");
     this.createBSTChart();
-
+    
 
   }
 
@@ -76,7 +86,7 @@ export class CpaChartComponent {
         const paths = this.extractJobPath(ctx[1].trim());
         paths.forEach((path: any) => {
           const eSTD: any = this.extractJobDetail(path, false);
-          extractedPaths.push({ source: eSTD[1], target: eSTD[3], value: parseFloat(eSTD[4]), pathStr: path });
+          extractedPaths.push({ source: eSTD[1], target: eSTD[3], value: eSTD[4], pathStr: path });
         });
         if (parseFloat(totalVal) > max) {
           max = parseFloat(totalVal);
@@ -92,7 +102,7 @@ export class CpaChartComponent {
         appCode,
         source: extractedSourceTargetDetail[1],
         target: extractedSourceTargetDetail[3],
-        value: parseFloat(extractedSourceTargetDetail[4]),
+        value: extractedSourceTargetDetail[4],
         pathStr: sourceTargetDetailStr,
         paths: extractedPaths
       });
@@ -133,30 +143,6 @@ export class CpaChartComponent {
 
 
   /***
-   * this is kind of recurive method to find the last child of the node and push it into result field
-   *
-   */
-
-  prepareChartData(key: any, result: any, chartData: any): any {
-    chartData[key].forEach((child: any) => {
-      if (key !== child.name) {
-        const { jobName, system }: any = this.cpaChartService.getJobName(child.name);
-        if (chartData[child.name]) {
-          result = result || { name: key, children: [] };
-          result.children.indexOf((e: any) => e.jobName === jobName) === -1 && result.children.push({ name: jobName, children: [], value: child.value, system });
-          this.prepareChartData(child.name, result.children.at(-1), chartData);
-        } else {
-          result = result || { name: key, children: [] };
-          result.children.indexOf((e: any) => e.jobName === jobName) === -1 && result.children.push({ name: jobName, children: [], value: child.value, system });
-        }
-      }
-
-    });
-    return result;
-
-  }
-
-  /***
    * with the extracted data from the string values, constructing a object 
    * with root node and its children
    */
@@ -170,7 +156,7 @@ export class CpaChartComponent {
       const val = map.get(key);
       const { jobName, system }: any = this.cpaChartService.getJobName(val.source);
       if (!chartData[jobName]) {
-        chartData[jobName] = { name: jobName, children: [], isCriticalPath: true, value: val.value, system };
+        chartData[jobName] = { name: jobName, children: [], isCriticalPath: true, value: parseFloat(val.value), system };
       }
 
       const targetJob = this.traverse(0, val.paths, chartData[jobName].children, globalEntry, val.isCriticalPath, {});
@@ -197,7 +183,7 @@ export class CpaChartComponent {
         globalEntry[jobName]++;
         child.push({ 
           name: jobName + "DUPLICATE_" + globalEntry[jobName], 
-          value: paths[index].value, 
+          value: parseFloat(paths[index].value), 
           children: [], 
           actualJobName: jobName, 
           isCriticalPath,
@@ -205,13 +191,13 @@ export class CpaChartComponent {
          });
       } else {
         globalEntry[jobName] = 1;
-        child.push({ name: jobName, value: paths[index].value, children: [], isCriticalPath, system });
+        child.push({ name: jobName, value: parseFloat(paths[index].value), children: [], isCriticalPath, system });
       }
       // total += parseFloat(paths[index].value.value);
       return this.traverse(index + 1, paths, child.at(-1).children, globalEntry, isCriticalPath, child.at(-1));
     } else { //If node is already present then process node for next scan and check critical path value because node can be common for both
       child[i].isCriticalPath = child[i].isCriticalPath ? child[i].isCriticalPath : isCriticalPath;
-      child[i].system = system;
+      // child[i].system = system;
       // total += parseFloat(child[i].value.value);
       return this.traverse(index + 1, paths, child[i].children, globalEntry, isCriticalPath, child[i]);
     }
@@ -232,7 +218,7 @@ export class CpaChartComponent {
    * returns ["JOB1_SystemName -> JOB2_SystemName", "JOB1_SystemName", "->" or "to" , "JOB2_SystemName"] 
    */
   private extractJobPath(path: string): any {
-    const regex = /([A-Za-z0-9/\\_]+)\s*->\s*([A-Za-z0-9/\\_]+)(\s+\d+\.\d+)?/g;
+    const regex = /([A-Za-z0-9/\\_.]+)\s*->\s*([A-Za-z0-9/\\_.]+)(\s+\d+\.\d+)?/g;
     const matches = path.match(regex);
     if (matches) {
       return matches;
@@ -248,7 +234,7 @@ export class CpaChartComponent {
    */
 
   private extractJobDetail(job: string, isRoot = false) {
-    const regexWithGroups = /([A-Za-z0-9/\\_]+)\s*(to|->)\s*([A-Za-z0-9/\\_]+)(\s+\d+\.\d+)?/;
+    const regexWithGroups = /([A-Za-z0-9/\\_.]+)\s*(to|->)\s*([A-Za-z0-9/\\_.]+)(\s+\d+\.\d+)?/;
     const result = job.match(regexWithGroups);
 
     return result;
@@ -264,6 +250,13 @@ export class CpaChartComponent {
   clearService(): void {
     this.treeData = {};
     this.map = new Map();
+  }
+
+  downloadDataUrl(): void {
+   this.cpaChartSvgService.downloadSVG();
+
+    
+    // this.coreDoc.body.removeChild(downloadLink);
   }
 
 
