@@ -37,12 +37,13 @@ export class CpaChartSvgService {
     this.svg = d3
       .select(element)
       .append('svg')
+      .attr('xmlns', "http://www.w3.org/2000/svg")
       .attr('width', graphWidth)
       .attr('height', graphHeight);
 
 
 
-    this.getLegend();
+    // this.getLegend();
     // Create a container group for all graph elements (nodes, links)
     this.getGraphCtx();
 
@@ -66,6 +67,7 @@ export class CpaChartSvgService {
       label: key,
       color: this.cpaChartService.allSystemProps[key].color,
       total: this.cpaChartService.allSystemProps[key].total,
+      jobs: this.cpaChartService.allSystemProps[key].jobs,
     }));
 
     // Create a legend group (position it in the top-left corner for now, you can adjust)
@@ -76,7 +78,7 @@ export class CpaChartSvgService {
     // .attr('y', 6);
     // Add a foreignObject to embed an HTML table
     legend.append('foreignObject')
-      .attr('width', 200) // Adjust the width of the table
+      .attr('width', 400) // Adjust the width of the table
       .attr('height', legendData.length * 30 + 50) // Adjust height dynamically based on the number of items
       .append('xhtml:div')
 
@@ -89,8 +91,10 @@ export class CpaChartSvgService {
           <thead>
             <tr>
               <th style="text-align: left; padding: 4px; border-bottom: 1px solid #ccc;">Color</th>
-              <th style="text-align: left; padding: 4px; border-bottom: 1px solid #ccc;">System</th>
-              <th style="text-align: left; padding: 4px; border-bottom: 1px solid #ccc;">Total</th>
+              <th style="text-align: left; padding: 4px; border-bottom: 1px solid #ccc;">App Code</th>
+              <th style="text-align: left; padding: 4px; border-bottom: 1px solid #ccc;">Total Time(Mins)</th>
+              <th style="text-align: left; padding: 4px; border-bottom: 1px solid #ccc;">Job(s)</th>
+
             </tr>
           </thead>
           <tbody>
@@ -103,6 +107,7 @@ export class CpaChartSvgService {
                     </td>
                     <td style="padding: 4px;">${item.label}</td>
                     <td style="padding: 4px;">${item.total}</td>
+                    <td style="padding: 4px;">${item.jobs?.join(",")}</td>
                   </tr>
                 `
             )
@@ -202,6 +207,7 @@ export class CpaChartSvgService {
           .attr("x", d.x) // Temporarily set x
           .attr("y", d.y + 40) // Adjust for vertical centering
           .attr("text-anchor", "middle")
+          .style("font-weight", "bold")
           .style("font-size", "40px") // Adjust font size
           .style("fill", "black")
           .text(d.data.actualJobName ? (d.data.actualJobName) : d.data.name);
@@ -234,7 +240,7 @@ export class CpaChartSvgService {
           .attr("width", rectWidth)
           .attr("height", 80)
           .attr("fill", (d: any) => {
-            if (d.data.isCriticalPath && (d.data.value === cpaChartService.allSystemProps[d.data.system].maxValue)) return "red";
+            if (cpaChartService.allSystemProps[d.data.system]?.jobs?.includes(d.data.name)) return "red";
             return 'white'; // Default for unknown status
           }) // Node color
           .attr("stroke", "black")
@@ -260,14 +266,15 @@ export class CpaChartSvgService {
       .attr('y', (d: any) => d.y + 180) // Vertically aligned with the node
       .text((d: any) => {
         if (this.cpaChartService.criticalPathSystemWiseTotalObj[d.data.name]) {
-          return `Total: ${this.cpaChartService.criticalPathSystemWiseTotalObj[d.data.name]}`
+          return `Total Time: ${this.cpaChartService.criticalPathSystemWiseTotalObj[d.data.name]}`
         } else {
           return ""
         }
 
       }) // Placeholder function for total
       .attr('font-size', 60)
-      .attr('fill', 'black');
+      .attr('font-weight', 'bold')
+      .attr('fill', 'orange');
   }
 
   private linkOverlayLabel() {
@@ -319,10 +326,10 @@ export class CpaChartSvgService {
     // Apply zoom behavior to the SVG container
     this.svg.call(zoom);
 
-    const defaultScale = 0.14;   // Default zoom scale (1 = original size)
+    const defaultScale = 0.3;   // Default zoom scale (1 = original size)
     const defaultTranslate = [0, 0];  // Default translation (no panning)
-
-    const initialTranslateX = (window.innerWidth / 4.5 - 200); // Center the root node horizontally
+      console.log(window.innerWidth);
+    const initialTranslateX = (-300); // Center the root node horizontally
     const initialTranslateY = (window.innerHeight / 2); // Center the root node vertically
 
     // Apply initial zoom transform to center root node
@@ -355,5 +362,53 @@ export class CpaChartSvgService {
     this.graph = "";
     this.root = "";
     this.ctx = "";
+  }
+
+  downloadSVG() {
+    // Get the SVG element as a string
+    let svgContent = this.svg.node().outerHTML;
+    svgContent = svgContent.replace('<svg ', `<svg transform="scale(0.4)" `);
+  // Create a new image element
+  let img = new Image();
+
+  // Create a Blob URL from the SVG content
+  let svgBlob = new Blob([svgContent], { type: 'image/svg+xml' });
+  let url = URL.createObjectURL(svgBlob);
+
+  // Set the image's source to the Blob URL
+  img.onload = function () {
+    // Create a canvas to draw the image
+    let canvas = document.createElement('canvas');
+    let ctx: any = canvas.getContext('2d');
+
+    // Set canvas size based on SVG dimensions
+    canvas.width = img.width;
+    canvas.height = img.height;
+
+    // Draw the SVG onto the canvas
+    let scaleFactor = Math.min(canvas.width / img.width, canvas.height / img.height);
+    ctx.drawImage(img, 0, 0, img.width * scaleFactor, img.height * scaleFactor);
+
+    // Export canvas to PNG
+    let dataURL = canvas.toDataURL('image/jpeg'); // You can change 'image/png' to 'image/jpeg' for JPEG images
+
+    // Create a link to download the image
+    let link = document.createElement('a');
+    link.href = dataURL;
+    link.download = 'image.jpeg'; // Set the file name for the image
+
+    // Trigger the download
+    link.click();
+    
+    // Clean up the object URL after download
+    URL.revokeObjectURL(url);
+  };
+
+  img.onerror = function (e) {
+    console.error("Error loading the image:", e);
+  };
+
+  // Set the image source to the SVG Blob URL
+  img.src = url;
   }
 }
