@@ -1,13 +1,10 @@
 <ng-template #longContent let-modal>
-	<div class="modal-header">
-		<h4 class="modal-title">Node: {{nodeDetails?.data?.name}}</h4>
+	<div class="modal-header p2">
+		<h6 class="modal-title">Job: <span class="header-value">{{nodeDetails?.data?.name}}</span> <span class="header-span">System: <span class="header-value">{{nodeDetails?.data?.system}}</span></span> <span class="header-span">Entity: <span class="header-value">{{nodeDetails?.data?.name}}</span></span></h6>
 		<button type="button" class="btn-close" aria-label="Close" (click)="modal.dismiss('Cross click')"></button>
 	</div>
 	<div class="modal-body">
-		<p>
-			Cras mattis consectetur purus sit amet fermentum. Cras justo odio, dapibus ac facilisis in, egestas eget quam.
-			Morbi leo risus, porta ac consectetur ac, vestibulum at eros.
-		</p>
+		<app-histogram [nodeDetails]="nodeDetails?.data"></app-histogram>
 		
 	</div>
 	<div class="modal-footer">

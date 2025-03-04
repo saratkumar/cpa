@@ -1,0 +1,29 @@
+<div #chart ></div>
+
+<table class="table table-striped" *ngIf="jobHistory$ | async as jobHistories; else loading">
+	<thead>
+		<tr>
+			<th scope="col">#</th>
+			<th scope="col">Business Date</th>
+			<th scope="col">Start Date Time</th>
+			<th scope="col">End Date Time</th>
+            <th scope="col">Start Delay</th>
+            <th scope="col">End Delay</th>
+		</tr>
+	</thead>
+	<tbody>
+                <tr  *ngFor="let jobHistory of jobHistories?.cpaEtaHistories;let i=index">
+                    <th scope="row">{{ i + 1 }}</th>
+                    <td>
+                        
+                        {{ jobHistory.businessDate }}
+                    </td>
+                    <td>{{ jobHistory.startDateTime |date:'yyyy-MM-dd HH:mm:ss'  }}</td>
+                    <td>{{ jobHistory.endDateTime |date:'yyyy-MM-dd HH:mm:ss' }}</td>
+                    <td>{{ jobHistory.startDelay }}</td>
+                    <td>{{ jobHistory.endDelay }}</td>
+                </tr>
+	</tbody>
+</table>
+
+<ng-template #loading>Loading...</ng-template>

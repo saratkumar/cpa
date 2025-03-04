@@ -40,12 +40,18 @@ export class CpaComponent implements OnInit {
   filteredOptions: Observable<string[]> | undefined;
 
 
-  constructor(private cpaApiService: CpaApiService, private cpaChartService: CpaChartService, private cdref: ChangeDetectorRef) {}
+  constructor(
+    private cpaApiService: CpaApiService, 
+    private cpaChartService: CpaChartService, 
+    private cdref: ChangeDetectorRef,
+    ) {}
   ngOnInit(): void {
     this.filteredOptions = this.myControl.valueChanges.pipe(
       startWith(''),
       map(value => this._filter(value || '')),
     );
+
+    //this.loadCriticalPaths();
   }
 
   private _filter(value: string): string[] {
@@ -83,4 +89,5 @@ export class CpaComponent implements OnInit {
     }));
     this.cdref.detectChanges();
   }
+
 }

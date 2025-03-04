@@ -11,6 +11,10 @@ export class CpaApiService {
 
 
   generateCPA(payload: any): Observable<any>  {
-    return this.apiService.createPost("/cpa/generate", payload);
+    return this.apiService.createPost("/cpa/critical-path", payload);
+  }
+
+  getJobHistories(payload: any) {
+    return this.apiService.createPost("/job-history", payload);
   }
 }

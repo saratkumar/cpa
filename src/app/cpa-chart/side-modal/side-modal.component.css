@@ -1,0 +1,42 @@
+.header-span{
+    padding-left: 20px;
+}
+
+.dark-modal .modal-content {
+    background-color: #292b2c;
+    color: white;
+}
+
+.modal-content {
+min-height: 100%;
+width:100%;
+}
+
+.dark-modal .close {
+    color: white;
+}
+
+.light-blue-backdrop {
+    background-color: #5cb3fd;
+}
+
+/* // .modal-dialog {
+//   position: absolute;
+//   right: 0;
+//   height: 99vh;
+//   margin:0;
+//   padding:0;
+// } */
+
+.modal-title {
+    font-size: 10px;
+    text-transform: uppercase;
+}
+
+
+
+.header-value {
+    font-weight: normal;
+    font-size: 11px;
+    padding-left: 5px;
+  }
