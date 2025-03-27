@@ -1,0 +1,66 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Side Modal</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <style>
+        .modal-xl { max-width: 90%; }
+        .header-span { margin-left: 10px; font-weight: bold; }
+        .header-value { font-weight: normal; color: blue; }
+    </style>
+</head>
+<body>
+
+    <button id="openModalBtn" class="btn btn-primary">Open Side Modal</button>
+
+    <div class="modal fade" id="sideModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-xl">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h6 class="modal-title">
+                        Job: <span class="header-value" id="jobName"></span>
+                        <span class="header-span">System: <span class="header-value" id="systemName"></span></span>
+                        <span class="header-span">Entity: <span class="header-value" id="entityName"></span></span>
+                    </h6>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="histogramContainer">Histogram will be displayed here.</div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            var openModalBtn = document.getElementById("openModalBtn");
+            var modal = new bootstrap.Modal(document.getElementById("sideModal"));
+
+            var jobData = {
+                name: "Job_A",
+                system: "APP001",
+                entity: "SG"
+            };
+
+            openModalBtn.addEventListener("click", function () {
+                document.getElementById("jobName").textContent = jobData.name;
+                document.getElementById("systemName").textContent = jobData.system;
+                document.getElementById("entityName").textContent = jobData.entity;
+
+                // Simulating Histogram Rendering (Replace this with actual chart logic)
+                document.getElementById("histogramContainer").innerHTML = "<p>Histogram for " + jobData.name + " will be shown here.</p>";
+
+                modal.show();
+            });
+        });
+    </script>
+
+</body>
+</html>

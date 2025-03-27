@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Job History</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <script src="https://d3js.org/d3.v6.min.js"></script>
+</head>
+<body>
+    <div id="chart"></div>
+
+    <table class="table table-striped" id="jobHistoryTable">
+        <thead>
+            <tr>
+                <th scope="col">#</th>
+                <th scope="col">Business Date</th>
+                <th scope="col">Start Date Time</th>
+                <th scope="col">End Date Time</th>
+                <th scope="col">Start Delay</th>
+                <th scope="col">End Delay</th>
+            </tr>
+        </thead>
+        <tbody id="jobHistoryBody"></tbody>
+    </table>
+
+    <div id="loading" style="display: none;">Loading...</div>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            const jobHistoryData = [
+                {
+                    businessDate: '2025-03-26',
+                    startDateTime: '2025-03-26 09:00:00',
+                    endDateTime: '2025-03-26 10:00:00',
+                    startDelay: '5 min',
+                    endDelay: '2 min'
+                },
+                {
+                    businessDate: '2025-03-25',
+                    startDateTime: '2025-03-25 10:00:00',
+                    endDateTime: '2025-03-25 11:00:00',
+                    startDelay: '3 min',
+                    endDelay: '1 min'
+                }
+            ];
+
+            document.getElementById('loading').style.display = 'block';
+
+            setTimeout(function() {
+                document.getElementById('loading').style.display = 'none';
+
+                const tableBody = document.getElementById('jobHistoryBody');
+
+                jobHistoryData.forEach((jobHistory, index) => {
+                    const row = document.createElement('tr');
+
+                    // Add row content
+                    row.innerHTML = `
+                        <th scope="row">${index + 1}</th>
+                        <td>${jobHistory.businessDate}</td>
+                        <td>${new Date(jobHistory.startDateTime).toLocaleString()}</td>
+                        <td>${new Date(jobHistory.endDateTime).toLocaleString()}</td>
+                        <td>${jobHistory.startDelay}</td>
+                        <td>${jobHistory.endDelay}</td>
+                    `;
+                    
+                    tableBody.appendChild(row);
+                });
+            }, 1000);
+        });
+
+
+        function Histogram() {
+            this.chartContainer = document.getElementById('chart');
+            this.processData = [];
+            this.threshold = { startTime: "", endTime: "" };
+        }
+
+        Histogram.prototype.init = function() {
+            console.log("Initializing Histogram...");
+            this.getJobHistory();
+        };
+
+        Histogram.prototype.getJobHistory = function() {
+            var self = this;
+            var xhr = new XMLHttpRequest();
+            xhr.open("GET", "/api/jobHistory", true);
+            xhr.onload = function() {
+                if (xhr.status === 200) {
+                    var response = JSON.parse(xhr.responseText);
+                    self.generateGraphData(response);
+                }
+            };
+            xhr.send();
+        };
+
+        Histogram.prototype.generateGraphData = function(data) {
+            var self = this;
+            data.cpaEtaHistories.forEach(function(el) {
+                var year = parseInt(el.businessDate.substring(0, 4));
+                var month = parseInt(el.businessDate.substring(4, 6)) - 1;
+                var day = parseInt(el.businessDate.substring(6, 8));
+                self.processData.push({
+                    date: new Date(year, month, day),
+                    duration: self.findDifferenceInMinutes(new Date(el.startDateTime), new Date(el.endDateTime))
+                });
+            });
+            self.setThreshold(data);
+            self.createChart();
+        };
+
+        Histogram.prototype.createChart = function() {
+            var self = this;
+            var margin = { top: 50, right: 30, bottom: 80, left: 60 };
+            var width = 1100 - margin.left - margin.right;
+            var height = 300 - margin.top - margin.bottom;
+
+            var thresholdValue = self.findDifferenceInMinutes(self.threshold.startTime, self.threshold.endTime);
+            var anomalyThreshold = thresholdValue * 1.3;
+
+            var svg = d3.select("#chart")
+                .append("svg")
+                .attr("width", width + margin.left + margin.right)
+                .attr("height", height + margin.top + margin.bottom)
+                .append("g")
+                .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+            var x = d3.scaleBand()
+                .domain(self.processData.map(function(d) { return d3.timeFormat("%b %d")(d.date); }))
+                .range([0, width])
+                .padding(0.3);
+
+            var y = d3.scaleLinear()
+                .domain([0, d3.max(self.processData, function(d) { return d.duration; })])
+                .nice()
+                .range([height, 0]);
+
+            svg.append("g")
+                .attr("transform", "translate(0," + height + ")")
+                .call(d3.axisBottom(x))
+                .selectAll("text")
+                .attr("transform", "rotate(-45)")
+                .style("text-anchor", "end")
+                .style("font-size", "8px");
+
+            svg.append("g")
+                .call(d3.axisLeft(y).ticks(5));
+
+            svg.selectAll(".bar")
+                .data(self.processData)
+                .enter()
+                .append("rect")
+                .attr("x", function(d) { return x(d3.timeFormat("%b %d")(d.date)); })
+                .attr("y", function(d) { return y(d.duration); })
+                .attr("width", x.bandwidth())
+                .attr("height", function(d) { return height - y(d.duration); })
+                .attr("fill", function(d) { return d.duration > anomalyThreshold ? "red" : "steelblue"; })
+                .attr("rx", 5)
+                .attr("ry", 5);
+
+            svg.selectAll(".label")
+                .data(self.processData)
+                .enter()
+                .append("text")
+                .attr("x", function(d) { return x(d3.timeFormat("%b %d")(d.date)) + x.bandwidth() / 2; })
+                .attr("y", function(d) { return y(d.duration) - 5; })
+                .attr("text-anchor", "middle")
+                .style("fill", "black")
+                .style("font-size", "10px")
+                .text(function(d) { return d.duration; });
+
+            svg.append("text")
+                .attr("x", width / 2)
+                .attr("y", -20)
+                .attr("text-anchor", "middle")
+                .attr("fill", "red")
+                .style("font-size", "14px")
+                .style("font-weight", "bold")
+                .text("Anomalies: " + self.processData.filter(function(d) { return d.duration > anomalyThreshold; }).length);
+        };
+
+        Histogram.prototype.findDifferenceInMinutes = function(startDateTime, endDateTime) {
+            var durationMilliseconds = endDateTime - startDateTime;
+            var durationSeconds = Math.floor(durationMilliseconds / 1000);
+            var durationMinutes = Math.floor(durationSeconds / 60);
+            return durationMinutes;
+        };
+
+        Histogram.prototype.getDateFromTimeString = function(timeString) {
+            var parts = timeString.split(":").map(Number);
+            var dateWithTime = new Date();
+            dateWithTime.setHours(parts[0], parts[1], parts[2], 0);
+            return dateWithTime;
+        };
+
+        Histogram.prototype.setThreshold = function(data) {
+            this.threshold.startTime = this.getDateFromTimeString(data.startTime);
+            this.threshold.endTime = this.getDateFromTimeString(data.endTime);
+        };
+
+        var histogram = new Histogram();
+        histogram.init();
+    </script>
+</body>
+</html>
